@@ -2,25 +2,34 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main         # 当代码推送到 main 分支时触发
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main         # 当拉取请求的目标分支为 main 时触发
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: set up JDK 11
-      uses: actions/setup-java@v4
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: gradle
+      # 第一步：检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+      # 第二步：设置 JDK 21 环境（使用 Temurin 发行版）
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      
+      # 第三步：构建 Android 项目，引用 Secret 值用于签名等敏感操作
+      - name: Build with Gradle
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEYSTORE_FILE: ${{ secrets.ANDROID_KEYSTORE_FILE }}
+        run: |
+          
+          ./gradlew assembleRelease
